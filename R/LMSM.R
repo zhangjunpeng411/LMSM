@@ -338,37 +338,6 @@ moduleSurvival <- function (Modulelist, ExpData, SurvData, devidePercentage = 0.
     return(LogRank_res)
 }
 
-## Average and median correlation between sponge lncRNAs and mRNAs in each LMSM module
-module.avg.cor <- function(ceRExp, mRExp, Modulelist, resample = 1000, method = c("mean", "median")) {
-
-    module_ceRExp <- lapply(seq_along(Modulelist), function(i) ceRExp[, which(colnames(ceRExp) %in% Modulelist[[i]])])
-    module_mRExp <- lapply(seq_along(Modulelist), function(i) mRExp[, which(colnames(mRExp) %in% Modulelist[[i]])])
-
-    if (method == "mean"){
-    module_avg_cor <- unlist(lapply(seq_along(Modulelist), function(i) mean(abs(cor(module_ceRExp[[i]], module_mRExp[[i]])))))
-    } else if (method == "median"){
-    module_avg_cor <- unlist(lapply(seq_along(Modulelist), function(i) median(abs(cor(module_ceRExp[[i]], module_mRExp[[i]])))))
-    }
-
-    module_avg_cor_resample <- c()
-    for (i in seq_along(Modulelist)){
-        
-	temp1 <- replicate(resample, sample(seq_len(ncol(ceRExp)), size = ncol(module_ceRExp[[i]])))
-        temp2 <- replicate(resample, sample(seq_len(ncol(mRExp)), size = ncol(module_mRExp[[i]])))
-        module_ceRExp_resample <- lapply(seq_len(resample), function(i) ceRExp[, temp1[, i]])
-        module_mRExp_resample <- lapply(seq_len(resample), function(i) mRExp[, temp2[, i]])
-
-        if (method == "mean"){
-        module_avg_cor_resample[i] <- mean(unlist(lapply(seq_len(resample), function(i) mean(na.omit(abs(cor(module_ceRExp_resample[[i]], module_mRExp_resample[[i]])))))))
-        } else if (method == "median"){
-        module_avg_cor_resample[i] <- median(unlist(lapply(seq_len(resample), function(i) median(na.omit(abs(cor(module_ceRExp_resample[[i]], module_mRExp_resample[[i]])))))))
-        }
-    }
-
-    return(list(module_avg_cor, module_avg_cor_resample))
-
-}
-
 ## miRNAs distribution in LMSM modules
 miR.distribution <- function(CommonmiRslist) {
 
