@@ -2,7 +2,7 @@ The data consists of expression data, putative miRNA-target interactions, BRCA-r
 
 BRCA_miRNA_lncRNA_mRNA.RData: Matched miRNA, lncRNA and mRNA expression data, and clinical information in BRCA.
 
-miRTarBase_v7.0+TarBase_v7.0+miRWalk_v2.0+NPInter_v3.0+LncBase_v2.csv: Putative miRNA-target interactions.
+miRTarBase_v8.0+TarBase_v7.0+miRWalk_v2.0+NPInter_v3.0+LncBase_v2.csv: Putative miRNA-target interactions.
 
 LncRNADisease_v2.0+Lnc2Cancer_v2.0+MNDR_v2.0.csv: BRCA-related lncRNAs.
 
