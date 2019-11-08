@@ -13,7 +13,7 @@ source("LMSM.R")
 
 ## Load data source
 load("BRCA_miRNA_lncRNA_mRNA.RData")
-miRTarget <- read.csv("miRTarBase_v7.0+TarBase_v7.0+miRWalk_v2.0+NPInter_v3.0+LncBase_v2.csv", header = TRUE, sep = ",")
+miRTarget <- read.csv("miRTarBase_v8.0+TarBase_v7.0+miRWalk_v2.0+NPInter_v3.0+LncBase_v2.csv", header = TRUE, sep = ",")
 BRCA_lncRNA <- read.csv("LncRNADisease_v2.0+Lnc2Cancer_v2.0+MNDR_v2.0.csv", header = FALSE, sep = ",")
 BRCA_mRNA <- read.csv("DisGeNET_v5.0+COSMIC_v86.csv", header = FALSE, sep = ",")
 BRCA_gene <- rbind(BRCA_lncRNA, BRCA_mRNA)
@@ -95,29 +95,6 @@ SurvData <- data.frame(rownames(clinical_USE), clinical_USE$time, clinical_USE$s
 colnames(SurvData) <- c("sample", "time", "status")
 sponge_WGCNA_Module_Survival <- moduleSurvival(LMSM_WGCNA_Modulegenes, ExpData, SurvData, devidePercentage=.5)
 
-## Calculate average correlation between sponge lncRNAs and mRNAs in LMSM modules
-LMSM_WGCNA_mean_cor <- module.avg.cor(LncRNA_USE, RNASeqV2_USE, LMSM_WGCNA_Modulegenes, resample = 1000, method = "mean")
-LMSM_WGCNA_median_cor <- module.avg.cor(LncRNA_USE, RNASeqV2_USE, LMSM_WGCNA_Modulegenes, resample = 1000, method = "median")
-
-LMSM_Random_module_mean_compare <- t.test(LMSM_WGCNA_mean_cor[[1]], LMSM_WGCNA_mean_cor[[2]], paired = TRUE)
-LMSM_Random_module_median_compare <- t.test(LMSM_WGCNA_median_cor[[1]], LMSM_WGCNA_median_cor[[2]], paired = TRUE)
-
-data1 <- data.frame(cor=c(LMSM_WGCNA_mean_cor[[1]], LMSM_WGCNA_mean_cor[[2]]), type = rep(c("LMSM modules", "Random modules"), each = 17))
-
-p1 <- ggplot(data1)+geom_point(aes(x=rep(seq_len(17),2),y=cor,colour=type), size=3)+
-          labs(x="Module ID", y="Mean value of absolute correlation", title = "p-value=1.53E-05")+
-	  theme(plot.title = element_text(hjust = 0.5), legend.position=c(0.2,0.9), 
-	  axis.title = element_text(face="bold"), title = element_text(face="bold"), 
-          axis.text = element_text(face="bold", color = "black"), legend.text =element_text(face="bold"))
-
-data2 <- data.frame(cor=c(LMSM_WGCNA_median_cor[[1]], LMSM_WGCNA_median_cor[[2]]), type = rep(c("LMSM modules", "Random modules"), each = 17))
-
-p2 <- ggplot(data2)+geom_point(aes(x=rep(seq_len(17),2),y=cor,colour=type), size=3)+
-          labs(x="Module ID", y="Median value of absolute correlation", title = "p-value=1.19E-05")+
-	  theme(plot.title = element_text(hjust = 0.5), legend.position=c(0.2,0.9), 
-	  axis.title = element_text(face="bold"), title = element_text(face="bold"), 
-          axis.text = element_text(face="bold", color = "black"), legend.text =element_text(face="bold"))
-
 ## miRNAs distribution in LMSM modules
 LMSM_WGCNA_miR_distribution <- miR.distribution(LMSM_WGCNA_CommonmiRs)
 
@@ -140,7 +117,7 @@ source("LMSM.R")
 
 ## Load data source
 load("BRCA_miRNA_lncRNA_mRNA.RData")
-miRTarget <- read.csv("miRTarBase_v7.0+TarBase_v7.0+miRWalk_v2.0+NPInter_v3.0+LncBase_v2.csv", header = TRUE, sep = ",")
+miRTarget <- read.csv("miRTarBase_v8.0+TarBase_v7.0+miRWalk_v2.0+NPInter_v3.0+LncBase_v2.csv", header = TRUE, sep = ",")
 BRCA_lncRNA <- read.csv("LncRNADisease_v2.0+Lnc2Cancer_v2.0+MNDR_v2.0.csv", header = FALSE, sep = ",")
 BRCA_mRNA <- read.csv("DisGeNET_v5.0+COSMIC_v86.csv", header = FALSE, sep = ",")
 BRCA_gene <- rbind(BRCA_lncRNA, BRCA_mRNA)
@@ -221,31 +198,6 @@ ExpData <- cbind(LncRNA_USE, RNASeqV2_USE)
 SurvData <- data.frame(rownames(clinical_USE), clinical_USE$time, clinical_USE$status)
 colnames(SurvData) <- c("sample", "time", "status")
 sponge_SGFA_Module_Survival <- moduleSurvival(LMSM_SGFA_Modulegenes, ExpData, SurvData, devidePercentage=.5)
-
-## Calculate average correlation between sponge lncRNAs and mRNAs in LMSM modules
-LMSM_SGFA_mean_cor <- module.avg.cor(LncRNA_USE, RNASeqV2_USE, LMSM_SGFA_Modulegenes, resample = 1000, method = "mean")
-LMSM_SGFA_median_cor <- module.avg.cor(LncRNA_USE, RNASeqV2_USE, LMSM_SGFA_Modulegenes, resample = 1000, method = "median")
-
-LMSM_Random_module_mean_compare <- t.test(LMSM_SGFA_mean_cor[[1]], LMSM_SGFA_mean_cor[[2]], paired = TRUE)
-LMSM_Random_module_median_compare <- t.test(LMSM_SGFA_median_cor[[1]], LMSM_SGFA_median_cor[[2]], paired = TRUE)
-
-data1 <- data.frame(cor=c(LMSM_SGFA_mean_cor[[1]], LMSM_SGFA_mean_cor[[2]]), type = rep(c("LMSM modules", "Random modules"), each = 51))
-
-p1 <- ggplot(data1)+geom_point(aes(x=rep(seq_len(51),2),y=cor,colour=type), size=3)+
-          labs(x="Module ID", y="Mean value of absolute correlation", title = "p-value=1.53E-14")+
-	  theme(plot.title = element_text(hjust = 0.5), legend.position=c(0.2,0.9), 
-	  axis.title = element_text(face="bold"), title = element_text(face="bold"), 
-          axis.text = element_text(face="bold", color = "black"), legend.text =element_text(face="bold"))+
-	  scale_y_continuous(breaks=seq(0.1, 0.3, 0.05))
-
-data2 <- data.frame(cor=c(LMSM_SGFA_median_cor[[1]], LMSM_SGFA_median_cor[[2]]), type = rep(c("LMSM modules", "Random modules"), each = 51))
-
-p2 <- ggplot(data2)+geom_point(aes(x=rep(seq_len(51),2),y=cor,colour=type), size=3)+
-             labs(x="Module ID", y="Median value of absolute correlation", title = "p-value=5.28E-14")+
-	     theme(plot.title = element_text(hjust = 0.5), legend.position=c(0.2,0.9), 
-	     axis.title = element_text(face="bold"), title = element_text(face="bold"), 
-             axis.text = element_text(face="bold", color = "black"), legend.text =element_text(face="bold"))+
-	     scale_y_continuous(breaks=seq(0.1, 0.3, 0.05))
 
 ## miRNAs distribution in LMSM modules
 LMSM_SGFA_miR_distribution <- miR.distribution(LMSM_SGFA_CommonmiRs)
