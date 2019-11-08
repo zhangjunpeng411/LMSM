@@ -1,4 +1,4 @@
-The data consists of expression data, putative miRNA-target interactions, BRCA-related lncRNAs and mRNAs, and experimentally validated lncRNA-related miRNA sponge interactions. All the data can be downloaded at https://drive.google.com/open?id=1KkgC2P18_KoLro-TUDilgl8QYGCbmAUO.
+The data consists of expression data, putative miRNA-target interactions, BRCA-related lncRNAs and mRNAs, and experimentally validated lncRNA-related miRNA sponge interactions. All the data can be downloaded at https://drive.google.com/open?id=1ryn-nZR8GZNPD1_IZ9zdhW7bGBFvzxih.
 
 BRCA_miRNA_lncRNA_mRNA.RData: Matched miRNA, lncRNA and mRNA expression data, and clinical information in BRCA.
 
