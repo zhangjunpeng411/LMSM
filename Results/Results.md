@@ -2,9 +2,9 @@ The results contain predicted lncRNA-related miRNA sponge interactions and miRNA
 
 LMSM_WGCNA_miRSponge.csv: Predicted lncRNA-related miRNA sponge interactions, the WGCNA method is used to identify lncRNA-mRNA coexpression modules.
 
-LMSM_WGCNA_miRTarget.csv: Predicted miRNA-target interactions, the WGCNA method is used to identify lncRNA-mRNA coexpression modules.
+LMSM_WGCNA_miRTarget.csv: Predicted miRNA-target interactions, the WGCNA method is used to identify lncRNA-mRNA coexpression modules. 
 
 LMSM_SGFA_miRSponge.csv: Predicted lncRNA-related miRNA sponge interactions, the SGFA method is used to identify lncRNA-mRNA coexpression modules.
 
-LMSM_SGFA_miRTarget.csv: Predicted miRNA-target interactions, the SGFA method is used to identify lncRNA-mRNA coexpression modules.
+LMSM_SGFA_miRTarget.csv: Predicted miRNA-target interactions, the SGFA method is used to identify lncRNA-mRNA coexpression modules. 
 
