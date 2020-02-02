@@ -359,4 +359,118 @@ miR.distribution <- function(CommonmiRslist) {
 return(res)
 }
 
+## Evaluate the performance of each LMSM module for classifying BRCA subtypes
+module.classify <- function(ceRExp, mRExp, BRCA_subtype, Modulelist, method = "br", base.algorith = "SVM", cv.folds = 10, 
+	                    cv.sampling = "stratified", cv.seed = 12345) {
+
+    module_ceRExp <- lapply(seq_along(Modulelist), function(i) ceRExp[, which(colnames(ceRExp) %in% Modulelist[[i]])])
+    module_mRExp <- lapply(seq_along(Modulelist), function(i) mRExp[, which(colnames(mRExp) %in% Modulelist[[i]])])
+    Basal <- as.numeric(BRCA_subtype[, 2] == "Basal")
+    Her2 <- as.numeric(BRCA_subtype[, 2] == "Her2")
+    LumA <- as.numeric(BRCA_subtype[, 2] == "LumA")
+    LumB <- as.numeric(BRCA_subtype[, 2] == "LumB")
+    Normal <- as.numeric(BRCA_subtype[, 2] == "Normal")    
+    module_classify <- list()
+
+    for (i in seq_along(Modulelist)){        
+	
+        temp <- as.data.frame(cbind(module_ceRExp[[i]], module_mRExp[[i]], Basal, Her2, LumA, LumB, Normal))
+	Indices <- ncol(temp)
+	temp_mldr <- mldr_from_dataframe(temp, labelIndices = c(Indices-4, Indices-3, Indices-2, Indices-1, Indices), name = "TEMPMLDR")
+        temp_res <- cv(temp_mldr, method = method, base.algorith = base.algorith, cv.folds = cv.folds, 
+	               cv.sampling = cv.sampling, cv.seed = cv.seed)
+        module_classify[[i]] <- temp_res
+
+    }
+
+    return(module_classify)
+}
+
+# Identifying lncRNA related miRNA sponge interactions using Sensitivity Partial Pearson Correlation (SPPC) method
+SPPC <- function(miRExp, ceRExp, mRExp, miRTarget, minSharedmiR = 3, pvaluecutoff = 0.05, poscorcutoff = 0, senscorcutoff = 0.1){   
+         
+        miRTarget <- as.matrix(miRTarget)	
+        miRceR <- miRTarget[intersect(which(miRTarget[, 1] %in% colnames(miRExp)),
+	                      which(miRTarget[, 2] %in% colnames(ceRExp))), ]
+        miRmR <- miRTarget[intersect(which(miRTarget[, 1] %in% colnames(miRExp)),
+	                      which(miRTarget[, 2] %in% colnames(mRExp))), ]
+
+	ceRSym <- unique(miRceR[, 2])
+        mRSym <- unique(miRmR[, 2])
+	miRSym <- unique(c(miRceR[, 1], miRmR[, 1]))
+
+	m <- length(ceRSym)
+	n <- length(mRSym)
+
+        ceRExp_query <- ceRExp[, which(colnames(ceRExp) %in% ceRSym)]
+        mRExp_query <- mRExp[, which(colnames(mRExp) %in% mRSym)]
+	
+        Cor.Pvalue <- corAndPvalue(ceRExp_query, mRExp_query)
+        
+	index <- which(Cor.Pvalue$cor > poscorcutoff & Cor.Pvalue$p < pvaluecutoff, arr.ind = TRUE)
+        
+	# Initialize variables
+        Res <- c()
+
+        for (i in seq_len(nrow(index))) {
+	    
+	        Interin1 <- miRceR[which(miRceR[, 2] %in% ceRSym[index[i, 1]]), 1]
+                Interin2 <- miRmR[which(miRmR[, 2] %in% mRSym[index[i, 2]]), 1]
+
+		M1 <- length(Interin1)
+                M2 <- length(Interin2)
+                M3 <- length(intersect(Interin1, Interin2))
+                M4 <- length(miRSym)
+                M5 <- 1 - phyper(M3 - 1, M2, M4 - M2, M1)
+
+                if (M3 >= minSharedmiR & M5 < pvaluecutoff) {
+                    
+                    C1 <- ceRSym[index[i, 1]]
+                    C2 <- mRSym[index[i, 2]]
+
+                    ceRExpIdx <- which(colnames(ceRExp) %in% ceRSym[index[i, 1]])
+                    mRExpIdx <- which(colnames(mRExp) %in% mRSym[index[i, 2]])
+                    miRExpIdx <- which(colnames(miRExp) %in% intersect(Interin1, Interin2))
+
+		    M6 <- Cor.Pvalue$cor[index[i, 1], index[i, 2]]
+		    M7 <- Cor.Pvalue$p[index[i, 1], index[i, 2]]
+                    M8 <- M6 - corpcor::pcor.shrink(cbind(ceRExp[, ceRExpIdx], mRExp[, mRExpIdx],
+                                                    miRExp[, miRExpIdx]), verbose = FALSE)[1, 2]
+                } else {
+
+                C1 <- NA; C2 <- NA; M6 <- NA; M7 <- NA; M8 <- NA 
+	       
+                }
+	       
+	        tmp <- c(C1, C2, M3, M5, M6, M7, M8)    
+                Res <- rbind(Res, tmp)
+	}
+
+        Res <- Res[which(as.numeric(Res[, 7]) > senscorcutoff), ]
+
+        colnames(Res) <- c("sponge_1", "sponge_2", "#Shared miRNAs", 
+                           "Sig. p.value of sharing miRNAs", 
+			   "Correlation", 
+                           "Sig. p.value of correlation", 			   
+			   "Sensitivity correlation")
+			   
+       rownames(Res) <- seq_len(nrow(Res))
+
+return(Res)
+
+}
+
+## Extracting modules with at least num.ModuleceRs (e.g. 2) ceRNAs and num.ModulemRs (e.g. 2) mRNAs
+CandModgenes <- function(ceRExp, mRExp, Modulegenes, num.ModuleceRs = 2, num.ModulemRs = 2){
+  
+    ceR_Num <- lapply(seq_along(Modulegenes), function(i) length(which(Modulegenes[[i]] %in%
+        colnames(ceRExp))))
+    mR_Num <- lapply(seq_along(Modulegenes), function(i) length(which(Modulegenes[[i]] %in%
+        colnames(mRExp))))
+
+    index <- which(ceR_Num >= num.ModuleceRs & mR_Num >= num.ModulemRs)
+    CandidateModulegenes <- lapply(index, function(i) Modulegenes[[i]])
+    
+return(CandidateModulegenes)
+}
 
