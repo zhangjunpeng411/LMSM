@@ -9,6 +9,10 @@ library(GSVA)
 library(pheatmap)
 library(ggplot2)
 library(survival)
+library(SPONGE)
+library(mldr)
+library(utiml)
+library(e1071)
 source("LMSM.R")
 
 ## Load data source
@@ -33,6 +37,19 @@ LMSM_WGCNA_CommonmiRs <- lapply(which(LMSM_WGCNA[, 3] >=3 & LMSM_WGCNA[, 5] < 0.
                                     LMSM_WGCNA[, 6] > 0.8 & LMSM_WGCNA[, 10] > 0.1), 
 				    function(i) CommonmiRs_WGCNA[[i]])
 rownames(LMSM_WGCNA_Filter_modules) <- names(LMSM_WGCNA_Modulegenes) <- names(LMSM_WGCNA_CommonmiRs) <- paste("LMSM", seq_along(LMSM_WGCNA_Modulegenes), sep=" ")
+
+## Evaluate the significance of each LMSM module by using null model
+LMSM_WGCNA_precomputed_cov_matrices <- precomputed_cov_matrices
+LMSM_WGCNA_null_model <- sponge_build_null_model(number_of_datasets = 1e+06, number_of_samples = 500, 
+                                                 cov_matrices = LMSM_WGCNA_precomputed_cov_matrices,  
+						 ks = seq(0.8, 0.9, 0.1), m_max = 1)
+LMSM_WGCNA_modules <- data.frame(geneA = paste("ceR_module", seq(nrow(LMSM_WGCNA_Filter_modules))), 
+                                 geneB = paste("mR_module", seq(nrow(LMSM_WGCNA_Filter_modules))), 
+				 df = replicate(nrow(LMSM_WGCNA_Filter_modules), 1), 
+				 cor = LMSM_WGCNA_Filter_modules[, 6], 
+				 pcor = LMSM_WGCNA_Filter_modules[, 9], 
+				 mscor = LMSM_WGCNA_Filter_modules[, 10])
+LMSM_WGCNA_modules_p.values <- sponge_compute_p_values(sponge_result = LMSM_WGCNA_modules, null_model = LMSM_WGCNA_null_model)
 
 ## BRCA subtypes identification using PAM50 method in genefu package
 annot <-  data.frame(colnames(RNASeqV2_USE))
@@ -98,6 +115,10 @@ sponge_WGCNA_Module_Survival <- moduleSurvival(LMSM_WGCNA_Modulegenes, ExpData, 
 ## miRNAs distribution in LMSM modules
 LMSM_WGCNA_miR_distribution <- miR.distribution(LMSM_WGCNA_CommonmiRs)
 
+## Performance of each LMSM module for classifying BRCA subtypes
+LMSM_WGCNA_classify_baseline <- do.call(cbind, module.classify(LncRNA_USE, RNASeqV2_USE, BRCA.subtype, LMSM_WGCNA_Modulegenes, method = "baseline"))
+LMSM_WGCNA_classify <- do.call(cbind, module.classify(LncRNA_USE, RNASeqV2_USE, BRCA.subtype, LMSM_WGCNA_Modulegenes, method = "br"))
+
 save.image("LMSM_WGCNA_0.8_BRCA_miRNA_lncRNA_mRNA.RData")
 
 
@@ -113,6 +134,10 @@ library(GSVA)
 library(pheatmap)
 library(ggplot2)
 library(survival)
+library(SPONGE)
+library(mldr)
+library(utiml)
+library(e1071)
 source("LMSM.R")
 
 ## Load data source
@@ -137,6 +162,19 @@ LMSM_SGFA_CommonmiRs <- lapply(which(LMSM_SGFA[, 3] >=3 & LMSM_SGFA[, 5] < 0.05 
                                    LMSM_SGFA[, 6] > 0.8 & LMSM_SGFA[, 10] > 0.1), 
 				   function(i) CommonmiRs_SGFA[[i]])
 rownames(LMSM_SGFA_Filter_modules) <- names(LMSM_SGFA_Modulegenes) <- names(LMSM_SGFA_CommonmiRs) <- paste("LMSM", seq_along(LMSM_SGFA_Modulegenes), sep=" ")
+
+## Evaluate the significance of each LMSM module by using null model
+LMSM_SGFA_precomputed_cov_matrices <- precomputed_cov_matrices
+LMSM_SGFA_null_model <- sponge_build_null_model(number_of_datasets = 1e+06, number_of_samples = 500, 
+                                                cov_matrices = LMSM_SGFA_precomputed_cov_matrices,  
+						ks = seq(0.8, 0.9, 0.1), m_max = 1)
+LMSM_SGFA_modules <- data.frame(geneA = paste("ceR_module", seq(nrow(LMSM_SGFA_Filter_modules))), 
+                                 geneB = paste("mR_module", seq(nrow(LMSM_SGFA_Filter_modules))), 
+				 df = replicate(nrow(LMSM_SGFA_Filter_modules), 1), 
+				 cor = LMSM_SGFA_Filter_modules[, 6], 
+				 pcor = LMSM_SGFA_Filter_modules[, 9], 
+				 mscor = LMSM_SGFA_Filter_modules[, 10])
+LMSM_SGFA_modules_p.values <- sponge_compute_p_values(sponge_result = LMSM_SGFA_modules, null_model = LMSM_SGFA_null_model)
 
 ## BRCA subtypes identification using PAM50 method in genefu package
 annot <-  data.frame(colnames(RNASeqV2_USE))
@@ -201,5 +239,9 @@ sponge_SGFA_Module_Survival <- moduleSurvival(LMSM_SGFA_Modulegenes, ExpData, Su
 
 ## miRNAs distribution in LMSM modules
 LMSM_SGFA_miR_distribution <- miR.distribution(LMSM_SGFA_CommonmiRs)
+
+## Performance of each LMSM module for classifying BRCA subtypes
+LMSM_SGFA_classify_baseline <- do.call(cbind, module.classify(LncRNA_USE, RNASeqV2_USE, BRCA.subtype, LMSM_SGFA_Modulegenes, method = "baseline"))
+LMSM_SGFA_classify <- do.call(cbind, module.classify(LncRNA_USE, RNASeqV2_USE, BRCA.subtype, LMSM_SGFA_Modulegenes, method = "br"))
 
 save.image("LMSM_SGFA_0.8_BRCA_miRNA_lncRNA_mRNA.RData")
