@@ -13,6 +13,8 @@ library(SPONGE)
 library(mldr)
 library(utiml)
 library(e1071)
+library(corpcor)
+library(miRspongeR)
 source("LMSM.R")
 
 ## Load data source
@@ -119,6 +121,23 @@ LMSM_WGCNA_miR_distribution <- miR.distribution(LMSM_WGCNA_CommonmiRs)
 LMSM_WGCNA_classify_baseline <- do.call(cbind, module.classify(LncRNA_USE, RNASeqV2_USE, BRCA.subtype, LMSM_WGCNA_Modulegenes, method = "baseline"))
 LMSM_WGCNA_classify <- do.call(cbind, module.classify(LncRNA_USE, RNASeqV2_USE, BRCA.subtype, LMSM_WGCNA_Modulegenes, method = "br"))
 
+## Comparison with a graph clustering-based strategy, the CPU runtime of the method is high. Users can divide the size of the variable "RNASeqV2_USE" into several parts (e.g. 8 parts)
+SPPC_network <- SPPC(miRNASeqHiseq_USE, LncRNA_USE, RNASeqV2_USE, miRTarget)
+SPPC_module_genes <- netModule(SPPC_network[, 1:2], modulesize = 4)
+SPPC_module <- CandModgenes(LncRNA_USE, RNASeqV2_USE, SPPC_module_genes)
+
+# BRCA enrichment analysis
+SPPC_Modulegenes_BRCA_EA <- module.BRCA.EA(LncRNA_USE, RNASeqV2_USE, BRCA_gene, SPPC_module)
+
+# Validation analysis
+SPPC_validate_res_experiment <- sponge.lncRNA.validate(SPPC_module, Validated_sponge_lncRNA_experiment)
+
+# Survival analysis
+sponge_SPPC_Module_Survival <- moduleSurvival(SPPC_module, ExpData, SurvData, devidePercentage=.5)
+
+# Performance for classifying BRCA subtypes
+SPPC_classify <- do.call(cbind, module.classify(LncRNA_USE, RNASeqV2_USE, BRCA.subtype, SPPC_module, method = "br"))
+
 save.image("LMSM_WGCNA_0.8_BRCA_miRNA_lncRNA_mRNA.RData")
 
 
@@ -138,6 +157,9 @@ library(SPONGE)
 library(mldr)
 library(utiml)
 library(e1071)
+library(WGCNA)
+library(corpcor)
+library(miRspongeR)
 source("LMSM.R")
 
 ## Load data source
@@ -243,5 +265,22 @@ LMSM_SGFA_miR_distribution <- miR.distribution(LMSM_SGFA_CommonmiRs)
 ## Performance of each LMSM module for classifying BRCA subtypes
 LMSM_SGFA_classify_baseline <- do.call(cbind, module.classify(LncRNA_USE, RNASeqV2_USE, BRCA.subtype, LMSM_SGFA_Modulegenes, method = "baseline"))
 LMSM_SGFA_classify <- do.call(cbind, module.classify(LncRNA_USE, RNASeqV2_USE, BRCA.subtype, LMSM_SGFA_Modulegenes, method = "br"))
+
+## Comparison with a graph clustering-based strategy, the CPU runtime of the method is high. Users can divide the size of the variable "RNASeqV2_USE" into several parts (e.g. 8 parts)
+SPPC_network <- SPPC(miRNASeqHiseq_USE, LncRNA_USE, RNASeqV2_USE, miRTarget)
+SPPC_module_genes <- netModule(SPPC_network[, 1:2], modulesize = 4)
+SPPC_module <- CandModgenes(LncRNA_USE, RNASeqV2_USE, SPPC_module_genes)
+
+# BRCA enrichment analysis
+SPPC_Modulegenes_BRCA_EA <- module.BRCA.EA(LncRNA_USE, RNASeqV2_USE, BRCA_gene, SPPC_module)
+
+# Validation analysis
+SPPC_validate_res_experiment <- sponge.lncRNA.validate(SPPC_module, Validated_sponge_lncRNA_experiment)
+
+# Survival analysis
+sponge_SPPC_Module_Survival <- moduleSurvival(SPPC_module, ExpData, SurvData, devidePercentage=.5)
+
+# Performance for classifying BRCA subtypes
+SPPC_classify <- do.call(cbind, module.classify(LncRNA_USE, RNASeqV2_USE, BRCA.subtype, SPPC_module, method = "br"))
 
 save.image("LMSM_SGFA_0.8_BRCA_miRNA_lncRNA_mRNA.RData")
